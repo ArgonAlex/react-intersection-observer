@@ -12,6 +12,7 @@ const external = id => !id.startsWith('.') && !id.startsWith(root)
 const extensions = ['.js', '.jsx', '.ts', '.tsx']
 const globals = {
   react: 'React',
+  'react-dom': 'ReactDOM',
 }
 
 const getBabelOptions = ({ useESModules }) => ({

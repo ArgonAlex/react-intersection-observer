@@ -1,3 +1,4 @@
+import * as ReactDOM from 'react-dom'
 import invariant from 'tiny-invariant'
 import { ObserverInstance, ObserverInstanceCallback } from './index'
 
@@ -136,29 +137,31 @@ export function destroy() {
 }
 
 function onChange(changes: IntersectionObserverEntry[]) {
-  changes.forEach(intersection => {
-    const { isIntersecting, intersectionRatio, target } = intersection
-    const instance = INSTANCE_MAP.get(target)
+  ReactDOM.unstable_batchedUpdates(() => {
+    changes.forEach(intersection => {
+      const { isIntersecting, intersectionRatio, target } = intersection
+      const instance = INSTANCE_MAP.get(target)
 
-    // Firefox can report a negative intersectionRatio when scrolling.
-    /* istanbul ignore else */
-    if (instance && intersectionRatio >= 0) {
-      // If threshold is an array, check if any of them intersects. This just triggers the onChange event multiple times.
-      let inView = instance.thresholds.some(threshold => {
-        return instance.inView
-          ? intersectionRatio > threshold
-          : intersectionRatio >= threshold
-      })
+      // Firefox can report a negative intersectionRatio when scrolling.
+      /* istanbul ignore else */
+      if (instance && intersectionRatio >= 0) {
+        // If threshold is an array, check if any of them intersects. This just triggers the onChange event multiple times.
+        let inView = instance.thresholds.some(threshold => {
+          return instance.inView
+            ? intersectionRatio > threshold
+            : intersectionRatio >= threshold
+        })
 
-      if (isIntersecting !== undefined) {
-        // If isIntersecting is defined, ensure that the element is actually intersecting.
-        // Otherwise it reports a threshold of 0
-        inView = inView && isIntersecting
+        if (isIntersecting !== undefined) {
+          // If isIntersecting is defined, ensure that the element is actually intersecting.
+          // Otherwise it reports a threshold of 0
+          inView = inView && isIntersecting
+        }
+
+        instance.inView = inView
+        instance.callback(inView, intersection)
       }
-
-      instance.inView = inView
-      instance.callback(inView, intersection)
-    }
+    })
   })
 }
 
